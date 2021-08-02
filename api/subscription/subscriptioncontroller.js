@@ -4,6 +4,7 @@ const {
   getPlanById,
 } = require("./subscriptionservice");
 const { getEndDate, convertDateToYYYYMMDD } = require("../../utils/utils");
+var moment = require("moment");
 module.exports = {
   createSubscription: (req, res) => {
     const body = req.body;
@@ -39,6 +40,7 @@ module.exports = {
   },
   getSubscriptions: (req, res) => {
     const username = req.params.username;
+    const date = req.params.date;
     getSubscriptions(username, (err, result) => {
       if (err) {
         console.log(err);
@@ -47,14 +49,29 @@ module.exports = {
       if (!result) {
         return [];
       } else {
-        var finalresult = result.map(({ planid, startdate, enddate }) => ({
-          plan_id: planid,
-          start_date: convertDateToYYYYMMDD(startdate),
-          valid_till: convertDateToYYYYMMDD(enddate),
-        }));
-        return res.json({
-          finalresult,
-        });
+        if (Date.parse(date) && moment(date, "YYYY-MM-DD").isValid()) {
+          var finalresult = result.map((item) => {
+            var startDate = moment(date, "YYYY-MM-DD");
+            var endDate = moment(item.enddate, "YYYY-MM-DD");
+            var diff = endDate.diff(startDate, "days");
+            return {
+              plan_id: item.planid,
+              days_left: diff,
+            };
+          });
+          return res.json({
+            finalresult,
+          });
+        } else {
+          var finalresult = result.map(({ planid, startdate, enddate }) => ({
+            plan_id: planid,
+            start_date: convertDateToYYYYMMDD(startdate),
+            valid_till: convertDateToYYYYMMDD(enddate),
+          }));
+          return res.json({
+            finalresult,
+          });
+        }
       }
     });
   },
