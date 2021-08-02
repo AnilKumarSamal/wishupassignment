@@ -23,8 +23,10 @@ module.exports = {
     const username = req.params.username;
     getUser(username, (err, result) => {
       if (err) {
-        console.log(err);
-        return;
+        return res.status(500).json({
+          success: 0,
+          message: err.message,
+        });
       }
       if (!result) {
         return res.json({
